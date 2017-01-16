@@ -5,7 +5,7 @@
 module load bioinfo-tools
 module load mcl/14-137   
 module load sqlite/3.8.5
-module load blast/2.4.0+
+module load blast/2.5.0+
 module load BioPerl/1.6.924_Perl5.18.4
 
 ORTHO=$PWD/../bin
@@ -250,8 +250,9 @@ $ORTHOMCL_BIN/orthomclMclToGroups OG 1 < mclOutput.I15.out > mclGroups.I15.table
 " > $DIR/finish.orthomcl.sh
 
 if [ $BLAST_Q -eq 1 ] ; then
-  qsub -W depend=afterokarray:$BLASTJOB $DIR/finish.orthomcl.sh
-  echo "qsub -W depend=afterokarray:$BLASTJOB $DIR/finish.orthomcl.sh" 
+  cmd="qsub -W depend=afterokarray:$BLASTJOB $DIR/finish.orthomcl.sh";
+  echo $cmd;
 else
-  sh $DIR/finish.orthomcl.sh
+  cmd="sh $DIR/finish.orthomcl.sh"
+  echo $cmd;
 fi
