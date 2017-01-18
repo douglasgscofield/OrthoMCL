@@ -31,3 +31,8 @@ WORKS with SQLITE3 (11) run the orthomclDumpPairsFiles program to dump the pairs
 WORKS with SQLITE3 (12) run the mcl program on the mcl_input.txt file created in Step 11.
 
 WORKS with SQLITE3 (13) run orthomclMclToGroups to convert mcl output to groups.txt
+
+Updates for working at UPPMAX
+-----------------------------
+
+There is a wrapper script included which runs several of these steps and prepares a blast file split into a number of separate parts

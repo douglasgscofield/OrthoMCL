@@ -1,0 +1,9 @@
+good_proteins_split
+goodProteins*
+poorProteins*
+slurm*
+*.sh
+database_test.sqlite
+t.*
+cleanseq
+proteomes

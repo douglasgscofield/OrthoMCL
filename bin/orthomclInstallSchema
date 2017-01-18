@@ -225,10 +225,10 @@ NOTE: the database login in the config file must have the required database priv
 
 Sample Config File:
 
-dbVendor=oracle  (or mysql)
-dbConnectString=dbi:Oracle:orthomcl
-dbLogin=my_db_login
-dbPassword=my_db_password
+dbVendor=oracle  (or mysql, or sqlite)
+dbConnectString=dbi:Oracle:orthomcl (for sqlite: DBI:SQLite:database_name.sqlite)
+dbLogin=my_db_login (for sqlite: none)
+dbPassword=my_db_password (for sqlite: none)
 oracleIndexTablespace=
 similarSequencesTable=SimilarSequences
 orthologTable=Ortholog

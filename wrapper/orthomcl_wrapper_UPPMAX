@@ -2,17 +2,21 @@
 
 #source /usr/local/Modules/3.2.9/init/bash
 
+BLAST_THREADS=4
+BLAST_TIME="10:00:00"
+ACCOUNT=
+EMAIL=
+SPLIT_DEFAULT=50
+
 module load bioinfo-tools
-module load mcl/14-137   
-module load sqlite/3.8.5
-module load blast/2.5.0+
-module load BioPerl/1.6.924_Perl5.18.4
+module load OrthoMCL/2.0.9
+#module load mcl/14-137   
+#module load sqlite/3.8.5
+#module load blast/2.5.0+
+#module load perl/5.18.4
+#module load BioPerl/1.6.924_Perl5.18.4
 
-ORTHO=$PWD/../bin
-
-SCRIPTS="$( cd "$(dirname "$0")" ; pwd -P )"
-ORTHOMCL_BIN=$ORTHO ##set environmental variable in .bashrc: export ORTHO=bin_dir_for_orthoMCL: source .bashrc
-OPTS=$(getopt -o c:p:u:s:o: -l "config:,protein_dir:,uniqid:,split:,ortho_db:" -n $0 -- "$@")
+OPTS=$(getopt -o c:p:u:s:o:a:e:t: -l "config:,protein_dir:,uniqid:,split:,ortho_db:,account:,email:,time:" -n $0 -- "$@")
 if [ $? -ne 0 ]
 then
     exit 1
@@ -63,6 +67,30 @@ while true ; do
             shift;
           fi
           ;;
+        -a|--account) 
+          shift;      
+          if [ -n "$1" ]; then
+            echo "setting ACCOUNT (sbatch) to be $1";
+            ACCOUNT="$1";
+            shift;
+          fi
+          ;;
+        -e|--email) 
+          shift;      
+          if [ -n "$1" ]; then
+            echo "setting EMAIL (sbatch) to be $1";
+            EMAIL="$1";
+            shift;
+          fi
+          ;;
+        -t|--time) 
+          shift;      
+          if [ -n "$1" ]; then
+            echo "setting BLAST_TIME (sbatch) to be $1";
+            BLAST_TIME="$1";
+            shift;
+          fi
+          ;;
          --)
            shift;
            break;
@@ -73,7 +101,7 @@ done
 
 if [ ! $PROTEIN_FASTA_DIR  ] ; then
   echo "Need to provide protein fasta dir"
-  echo "$0 -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name]"
+  echo "$0 -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name] -a [SLURM account] -e [SLURM email]"
   echo "   
 config file  :     a config file for the SQLite3 databases. If one is not specified,
                    then an example is created to 'orthomcl.config', if that file does
@@ -93,7 +121,12 @@ uniq_id      :     a number indicating what field in the definition line contain
                    ID (AP_000668.1) is in field 4:  >gi|89106888|ref|AP_000668.1|
                    [default=2]
 split        :     How many blast jobs do you want to run? 
-		   [default=500]"
+                   [default=$SPLIT_DEFAULT]
+account      :     SLURM account to charge for blast jobs
+email        :     Email address for SLURM blast job notifications
+time         :     Time limit to use for each SLURM blast job
+                   [default=$BLAST_TIME]
+"
   exit 1
 
 fi
@@ -106,13 +139,21 @@ if [ ! $ORTHO_DB  ] ; then
 fi
 
 if [ ! $SPLIT  ] ; then 
-  SPLIT=500
+  SPLIT=$SPLIT_DEFAULT
 fi
+
+ACCOUNT=${ACCOUNT:?SLURM account must be supplied with -a/--account}
+EMAIL=${EMAIL:?SLURM notification email must be supplied with -e/--email}
+BLAST_TIME=${BLAST_TIME:?SLURM blast job time limit must be supplied with -t/--time}
 
 echo "PROTEIN_FASTA_DIR is $PROTEIN_FASTA_DIR"
 echo "UNIQID id $UNIQID"
 echo "ORTHO_DB is $ORTHO_DB"
 echo "SPLIT is $SPLIT"
+echo "ACCOUNT is $ACCOUNT"
+echo "EMAIL is $EMAIL"
+echo "BLAST_TIME is $BLAST_TIME"
+echo "BLAST_THREADS is $BLAST_THREADS"
 
 
 DIR=`pwd`
@@ -147,7 +188,7 @@ if [ -e "$ORTHO_DB.sqlite" ] ; then
 fi
 
 
-$ORTHOMCL_BIN/orthomclInstallSchema "$ORTHOMCL_CONFIG"
+orthomclInstallSchema "$ORTHOMCL_CONFIG"
 
 
 
@@ -172,10 +213,10 @@ if [ ! -d cleanseq ] ; then
    do
    base=`basename $file .pep`
    ## which field has a uniq ID? => 2
-   $ORTHOMCL_BIN/orthomclAdjustFasta $base $file $UNIQID 
+   orthomclAdjustFasta $base $file $UNIQID 
   done
   cd $DIR
-  $ORTHOMCL_BIN/orthomclFilterFasta cleanseq 10 10
+  orthomclFilterFasta cleanseq 10 10
 fi
 
 ## format goodProteins BLAST DB
@@ -191,7 +232,7 @@ fi
 if [ ! -e $DIR/good_proteins_split/goodProteins_part_${MAX}.fasta ] ; then
   cd $DIR/good_proteins_split
   cp -s $DIR/goodProteins.fasta .
-  $SCRIPTS/split_fasta.pl $SPLIT goodProteins.fasta
+  split_fasta.pl $SPLIT goodProteins.fasta
   rm -f $DIR/good_proteins_split/goodProteins.fasta
 fi 
 cd $DIR 
@@ -205,54 +246,72 @@ BLAST_Q=0
 if [ ! -d $DIR/blastp_out ] ; then
   ## make array BLAST job
   BLAST_Q=1
-  echo "#PBS -t 0-${MAX}
-#PBS -q js
-##PBS -l nodes=1:ppn=4
-module load ncbi-blast
+  echo "#SBATCH -A $ACCOUNT
+#SBATCH -p core -n $BLAST_THREADS
+#SBATCH -t $BLAST_TIME
+#SBATCH -J run_split_blast_array
+#SBATCH --mail-user=$EMAIL
+#SBATCH --mail-type=ALL
+
+PART=\${1:?Must provide fasta part number between 0 and $(($SPLIT - 1))}
+
+module load bioinfo-tools
+module load blast/2.5.0+
+
 cd $DIR
-blastp -query good_proteins_split/goodProteins_part_\${PBS_ARRAYID}.fasta -db goodProteins.fasta -num_threads 4 -outfmt 6 -out $DIR/blastp_out/goodProteins_part_\${PBS_ARRAYID}_vs_goodProteins.BLASTP.tab -evalue 1e-3" > $DIR/run_split_blast_array.sh
+blastp -query good_proteins_split/goodProteins_part_\${PART}.fasta -db goodProteins.fasta -num_threads $BLAST_THREADS -outfmt 6 -out $DIR/blastp_out/goodProteins_part_\${PART}_vs_goodProteins.BLASTP.tab -evalue 1e-3" > $DIR/run_split_blast_array.sh
 
-
-  #run array BLAST job
-  BLASTJOB=`qsub run_split_blast_array.sh`
-  echo "JOBS SUBMITTED AND HOPEFULLY RUNNING ON YOUR QUEUE:"
-  echo "$BLASTJOB = qsub $DIR/run_split_blast_array.sh"
+    JOBS=
+    for PART in $(seq 0 $((SPLIT - 1))) ; do
+        echo "submitting job for part $PART"
+        JOBS="$JOBS $(sbatch $DIR/run_split_blast_array.sh $PART | cut -f4 -d' ')"
+    done
+    JOBS=$(echo "$JOBS" | sed -e '/s^ //' -e 's/ /,/g')
 fi
 
 
-echo "
-#module load orthoMCL
-#module load ncbi-blast
+echo "#SBATCH -A $ACCOUNT
+#SBATCH -p core -n $BLAST_THREADS
+#SBATCH -t 4-00:00:00
+#SBATCH -J finish.orthomcl
+#SBATCH --mail-user=$EMAIL
+#SBATCH --mail-type=ALL
+
+module load bioinfo-tools
+module load OrthoMCL/2.0.9
+#module load mcl/14-137   
+#module load sqlite/3.8.5
+#module load blast/2.5.0+
+#module load perl/5.18.4
+#module load BioPerl/1.6.924_Perl5.18.4
 
 cd $DIR 
 
 # This will reformat the BLAST data into something to load into the database
 if [ ! -f goodProteins.BLASTP.bpo ]; then
  cat blastp_out/*tab > goodProteins.BLASTP.tab
- $ORTHOMCL_BIN/orthomclBlastParser goodProteins.BLASTP.tab cleanseq > goodProteins.BLASTP.bpo
+ orthomclBlastParser goodProteins.BLASTP.tab cleanseq > goodProteins.BLASTP.bpo
 fi
 
 # Load the data into the DB
-$ORTHOMCL_BIN/orthomclLoadBlast $ORTHOMCL_CONFIG goodProteins.BLASTP.bpo
+orthomclLoadBlast $ORTHOMCL_CONFIG goodProteins.BLASTP.bpo
 
 # now run the ortholog/paralog initial finding
 rm -rf pairs pairs.log 
-$ORTHOMCL_BIN/orthomclPairs $ORTHOMCL_CONFIG  pairs.log cleanup=no
+orthomclPairs $ORTHOMCL_CONFIG  pairs.log cleanup=no
 
 # Dump out the ortholog groups and the mclInput file
-$ORTHOMCL_BIN/orthomclDumpPairsFiles $ORTHOMCL_CONFIG
+orthomclDumpPairsFiles $ORTHOMCL_CONFIG
 
 # Run mcl for clustering
 mcl mclInput  --abc -I 1.5 -o mclOutput.I15.out
 
 # convert the MCL clusters into OrthoMCL groups
-$ORTHOMCL_BIN/orthomclMclToGroups OG 1 < mclOutput.I15.out > mclGroups.I15.table
+orthomclMclToGroups OG 1 < mclOutput.I15.out > mclGroups.I15.table
 " > $DIR/finish.orthomcl.sh
 
 if [ $BLAST_Q -eq 1 ] ; then
-  cmd="qsub -W depend=afterokarray:$BLASTJOB $DIR/finish.orthomcl.sh";
-  echo $cmd;
-else
-  cmd="sh $DIR/finish.orthomcl.sh"
-  echo $cmd;
+    CMD="sbatch --dependency=afterok:$JOBS $DIR/finish.ortho.mcl.sh"
+    echo "wrapup slurm command is '$CMD'"
+    eval $CMD;
 fi
