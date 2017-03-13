@@ -1,0 +1,185 @@
+
+
+============================================================================================
+Wed Jan 18 16:53:04 2017 orthomclPairs /pica/sw/apps/bioinfo/OrthoMCL/2.0.9/milou/orthomcl.config.example.UPPMAX pairs.log cleanup=no
+=============================================================================================
+
+Wed Jan 18 16:53:04 2017 Constructing common temp tables
+Wed Jan 18 16:53:04 2017   Find min evalue exp  (OrthoMCL-DB V2 took ??? for this step)
+Wed Jan 18 16:53:04 2017   done
+Wed Jan 18 16:53:04 2017   updating SimilarSequences, setting 0 evalue_exp to underflow value (-180 - 1)  (Benchmark dataset took 25 min for this step)
+Wed Jan 18 16:53:05 2017   step 'updateMinimumEvalueExponent' done (1 mins)
+
+Wed Jan 18 16:53:05 2017   create new table in SQLite BestQueryTaxonScore  (Benchmark dataset took 1.5 hours for this step)
+Wed Jan 18 16:53:05 2017   step 'bestQueryTaxonScore' done (1 mins)
+
+Wed Jan 18 16:53:05 2017   create BestQueryTaxonScore  (Benchmark dataset took 1.5 hours for this step)
+Wed Jan 18 16:53:06 2017   step 'bestQueryTaxonScore' done (1 mins)
+
+Wed Jan 18 16:53:06 2017   create qtscore_ix index on BestQueryTaxonScore  (Benchmark dataset took 15 min for this step)
+Wed Jan 18 16:53:06 2017   step 'qtscore_ix' done (1 mins)
+
+Wed Jan 18 16:53:06 2017 Constructing ortholog tables
+Wed Jan 18 16:53:06 2017   create BestHit  (Benchmark dataset took 1.5 hours for this step)
+Wed Jan 18 16:53:06 2017   step 'bestHit' done (1 mins)
+
+Wed Jan 18 16:53:06 2017   Insert into BestHit  (Benchmark dataset took 1.5 hours for this step)
+Wed Jan 18 16:53:07 2017   step 'bestHit' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create best_hit_ix index on BestHit  (Benchmark dataset took 15 min for this step)
+Wed Jan 18 16:53:07 2017   step 'best_hit_ix' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologTemp table  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:07 2017   step 'ortholog' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologTemp table  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:07 2017   step 'ortholog' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologTaxon table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:07 2017   step 'orthologTaxon' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologAvgScore table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:07 2017   step 'orthologAvg' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologAvgScore table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:07 2017   step 'orthologAvg' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create OrthologAvgScore index  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:07 2017   step 'orthologAvgIndex' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   populate Ortholog table, including normalized_score  (Benchmark dataset took 2 min for this step)
+Wed Jan 18 16:53:07 2017   step 'orthologsNormalization' done (1 mins)
+
+Wed Jan 18 16:53:07 2017 Constructing inParalog tables
+Wed Jan 18 16:53:07 2017   create BestInterTaxonScore  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:07 2017   step 'bestInterTaxonScore' done (1 mins)
+
+Wed Jan 18 16:53:07 2017   create BestInterTaxonScore  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:08 2017   step 'bestInterTaxonScore' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create bis_uids_ix index on BestQueryTaxonScore  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'bis_uids_ix' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create UniqSimSeqsQueryId  (Benchmark dataset took 25 min for this step)
+Wed Jan 18 16:53:08 2017   step 'uniqueSimSeqsQueryId' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create UniqSimSeqsQueryId  (Benchmark dataset took 25 min for this step)
+Wed Jan 18 16:53:08 2017   step 'uniqueSimSeqsQueryId' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create ust_qids_ix index on UniqSimSeqsQueryId  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'ust_qids_ix' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create BetterHit table  (Benchmark dataset took 3 min for this step)
+Wed Jan 18 16:53:08 2017   step 'betterHit' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create BetterHit table  (Benchmark dataset took 3 hours for this step)
+Wed Jan 18 16:53:08 2017   step 'betterHit' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create better_hit_ix index on BetterHit  (Benchmark dataset took 25 min for this step)
+Wed Jan 18 16:53:08 2017   step 'better_hit_ix' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogTemp  (Benchmark dataset took 3 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalog' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogTemp table  (Benchmark dataset took 15 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalog' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogTaxonAvg table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogTaxonAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogTaxonAvg table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogTaxonAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create OrthologUniqueId table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogTaxonAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create OrthologUniqueId table  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:08 2017   step 'orthologUniqueId' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create unique ortho_uniq_id_ix index  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'orthologUniqueIdIndex' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InplgOrthTaxonAvg table  (Benchmark dataset took 10 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inplgOrthTaxonAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InplgOrthTaxonAvg table  (Benchmark dataset took 10 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inplgOrthTaxonAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogAvgScore table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogAvg' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create InParalogAvgScore index  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogAvgIndex' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   populate InParalog table, including normalized_score  (Benchmark dataset took 3 min for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalogsNormalization' done (1 mins)
+
+Wed Jan 18 16:53:08 2017 Constructing coOrtholog tables
+Wed Jan 18 16:53:08 2017   create InParalog2Way  (Benchmark dataset took 1.5 hours for this step)
+Wed Jan 18 16:53:08 2017   step 'inParalog2Way' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   index in2a_ix  (Benchmark dataset took 45 min for this step)
+Wed Jan 18 16:53:08 2017   step 'in2a_ix' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   index in2b_ix  (Benchmark dataset took 45 min for this step)
+Wed Jan 18 16:53:08 2017   step 'in2b_ix' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create Ortholog2Way  (Benchmark dataset took 1 hours for this step)
+Wed Jan 18 16:53:08 2017   step 'ortholog2Way' done (1 mins)
+
+Wed Jan 18 16:53:08 2017   create Ortholog2Way  (Benchmark dataset took 1 hours for this step)
+Wed Jan 18 16:53:09 2017   step 'ortholog2Way' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   index ortholog2way_ix  (Benchmark dataset took 5 min for this step)
+Wed Jan 18 16:53:09 2017   step 'ortholog2WayIndex' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create InplgOrthoInplg  (Benchmark dataset took 20 min for this step)
+Wed Jan 18 16:53:09 2017   step 'inplgOrthoInplg' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create InplgOrthoInplg  (Benchmark dataset took 20 min for this step)
+Wed Jan 18 16:53:09 2017   step 'inplgOrthoInplg' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create InParalogOrtholog  (Benchmark dataset took 15 min for this step)
+Wed Jan 18 16:53:09 2017   step 'inParalogOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create InParalogOrtholog  (Benchmark dataset took 15 min for this step)
+Wed Jan 18 16:53:09 2017   step 'inParalogOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologCandidate  (Benchmark dataset took 1 hour for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologCandidate' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologCandidate  (Benchmark dataset took 1 hour for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologCandidate' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthNotOrtholog table  (Benchmark dataset took 10 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologNotOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthNotOrtholog table  (Benchmark dataset took 10 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologNotOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   index cno_ix  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologNotOrthologIndex' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologTemp table  (Benchmark dataset took 2 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologTemp table  (Benchmark dataset took 2 hours for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrtholog' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologTaxon table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologTaxon' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologAvgScore table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologAvg' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologAvgScore table  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologAvg' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   create CoOrthologAvgScore index  (Benchmark dataset took 1 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologAvgIndex' done (1 mins)
+
+Wed Jan 18 16:53:09 2017   populate CoOrtholog table, including normalized_score  (Benchmark dataset took 2 min for this step)
+Wed Jan 18 16:53:09 2017   step 'coOrthologsNormalization' done (1 mins)
+
+
+Done

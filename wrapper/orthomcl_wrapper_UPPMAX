@@ -1,6 +1,4 @@
-#!/bin/bash -l
-
-#source /usr/local/Modules/3.2.9/init/bash
+#!/bin/bash
 
 BLAST_THREADS=4
 BLAST_TIME="10:00:00"
@@ -11,12 +9,12 @@ SPLIT_DEFAULT=50
 module load bioinfo-tools
 module load OrthoMCL/2.0.9
 #module load mcl/14-137   
-#module load sqlite/3.8.5
+#module load sqlite/3.16.2
 #module load blast/2.5.0+
 #module load perl/5.18.4
 #module load BioPerl/1.6.924_Perl5.18.4
 
-OPTS=$(getopt -o c:p:u:s:o:a:e:t: -l "config:,protein_dir:,uniqid:,split:,ortho_db:,account:,email:,time:" -n $0 -- "$@")
+OPTS=$(getopt -o Cc:p:u:s:o:a:e:t: -l "CreateConfig,config:,protein_dir:,uniqid:,split:,ortho_db:,account:,email:,time:" -n $0 -- "$@")
 if [ $? -ne 0 ]
 then
     exit 1
@@ -26,6 +24,10 @@ eval set -- "$OPTS"
 
 while true ; do
     case "$1" in
+        -C|--CreateConfig) 
+          shift; 
+          CREATE_ORTHOMCL_CONFIG='yes';
+          ;;
         -c|--config) 
           shift; 
           if [ -n "$1" ]; then
@@ -99,13 +101,38 @@ while true ; do
     esac
 done
 
+if [ ! $ORTHO_DB  ] ; then
+  ORTHO_DB="orthoMCL.DB.`date +%Y.%m.%d`"; 
+fi
+
+if [[ "$CREATE_ORTHOMCL_CONFIG" ]] ; then
+  echo "No config file specified"
+  [[ ! -e orthomcl.config ]] || { echo "Cannot create example config file, 'orthomcl.config' exists"; exit 1; }
+  echo "Creating an example config file in 'orthomcl.config'"
+  echo "dbVendor=sqlite 
+dbConnectString=DBI:SQLite:database=${ORTHO_DB}.sqlite
+dbLogin=none
+dbPassword=none
+similarSequencesTable=SimilarSequences
+orthologTable=Ortholog
+inParalogTable=InParalog
+coOrthologTable=CoOrtholog
+interTaxonMatchView=InterTaxonMatch
+percentMatchCutoff=50
+evalueExponentCutoff=-5
+oracleIndexTblSpc=NONE" > orthomcl.config
+  exit 1
+fi
+
 if [ ! $PROTEIN_FASTA_DIR  ] ; then
   echo "Need to provide protein fasta dir"
-  echo "$0 -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name] -a [SLURM account] -e [SLURM email]"
-  echo "   
-config file  :     a config file for the SQLite3 databases. If one is not specified,
-                   then an example is created to 'orthomcl.config', if that file does
-                   not exist. A config file must be specified.
+  echo "${0##*/} -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name] -a [SLURM account] -e [SLURM email] -t [SLURM blast job time]
+
+${0##*/} -C        creates an example config file to 'orthomcl.config' and then exits.  If
+                   the -o option is used, the database within the example config file is given
+                   that name.
+
+config file  :     a config file for the SQLite3 databases. A config file must be specified.
                    [no default]
 protein_dir  :     a directory of FASTA files. One FASTA for each species.
                    Each FASTA file must have a name in the form 'xxxx.fasta' 
@@ -134,9 +161,6 @@ if [ ! $UNIQID  ] ; then
   ## guess
   UNIQID=2
 fi
-if [ ! $ORTHO_DB  ] ; then
-  ORTHO_DB="orthoMCL.DB.`date +%Y.%m.%d`"; 
-fi
 
 if [ ! $SPLIT  ] ; then 
   SPLIT=$SPLIT_DEFAULT
@@ -159,24 +183,7 @@ echo "BLAST_THREADS is $BLAST_THREADS"
 DIR=`pwd`
 cd $DIR
 
-if [[ ! "$ORTHOMCL_CONFIG" ]] ; then
-  echo "No config file specified"
-  [[ ! -e orthomcl.config ]] || { echo "Cannot create example config file, 'orthomcl.config' exists"; exit 1; }
-  echo "Creating an example config file in 'orthomcl.config'"
-  echo "dbVendor=sqlite 
-dbConnectString=DBI:SQLite:database=${ORTHO_DB}.sqlite
-dbLogin=none
-dbPassword=none
-similarSequencesTable=SimilarSequences
-orthologTable=Ortholog
-inParalogTable=InParalog
-coOrthologTable=CoOrtholog
-interTaxonMatchView=InterTaxonMatch
-percentMatchCutoff=50
-evalueExponentCutoff=-5
-oracleIndexTblSpc=NONE" > orthomcl.config
-  exit 1
-elif [ ! -e "$ORTHOMCL_CONFIG" ] ; then
+if [ ! -e "$ORTHOMCL_CONFIG" ] ; then
   echo "Config file '$ORTHOMCL_CONFIG' not found"
   exit 1
 fi
@@ -238,15 +245,17 @@ fi
 cd $DIR 
 
 ## get ready for blast
-if [ ! -d $DIR/blastp_out ] ; then
-  mkdir $DIR/blastp_out
-fi
+#if [ ! -d $DIR/blastp_out ] ; then
+#  mkdir $DIR/blastp_out
+#fi
 BLAST_Q=0
 ## consider adding check for qsub:  if [ `which qsub` != '' ] ; then
 if [ ! -d $DIR/blastp_out ] ; then
+  mkdir $DIR/blastp_out
   ## make array BLAST job
   BLAST_Q=1
-  echo "#SBATCH -A $ACCOUNT
+  echo "#!/bin/bash -l
+#SBATCH -A $ACCOUNT
 #SBATCH -p core -n $BLAST_THREADS
 #SBATCH -t $BLAST_TIME
 #SBATCH -J run_split_blast_array
@@ -259,18 +268,31 @@ module load bioinfo-tools
 module load blast/2.5.0+
 
 cd $DIR
-blastp -query good_proteins_split/goodProteins_part_\${PART}.fasta -db goodProteins.fasta -num_threads $BLAST_THREADS -outfmt 6 -out $DIR/blastp_out/goodProteins_part_\${PART}_vs_goodProteins.BLASTP.tab -evalue 1e-3" > $DIR/run_split_blast_array.sh
+blastp -query good_proteins_split/goodProteins_part_\${PART}.fasta -db goodProteins.fasta -num_threads $BLAST_THREADS -outfmt 6 -out $DIR/blastp_out/goodProteins_part_\${PART}_vs_goodProteins.BLASTP.tab -evalue 1e-3
+" > $DIR/run_split_blast_array.sh
 
-    JOBS=
-    for PART in $(seq 0 $((SPLIT - 1))) ; do
-        echo "submitting job for part $PART"
-        JOBS="$JOBS $(sbatch $DIR/run_split_blast_array.sh $PART | cut -f4 -d' ')"
-    done
-    JOBS=$(echo "$JOBS" | sed -e '/s^ //' -e 's/ /,/g')
+    echo "#!/bin/bash
+
+JOBS=
+for PART in \$(seq 0 $(($SPLIT - 1))) ; do
+    echo submitting job for part \$PART
+    JOBS=\"\$JOBS \$(sbatch $DIR/run_split_blast_array.sh \$PART | cut -f4 -d' ')\"
+done
+JOBS=\$(echo \$JOBS | sed -e 's/^ \+//' -e 's/ /,/g')
+
+[[ \"\$JOBS\" ]] || { echo 'JOBS not set'; exit 1; }
+
+CMD=\"sbatch --dependency=afterok:\$JOBS $DIR/finish.orthomcl.sh\"
+echo \"wrapup slurm command is '\$CMD'\"
+eval \$CMD;
+
+" > $DIR/submit_split_blast_jobs.sh
+
 fi
 
 
-echo "#SBATCH -A $ACCOUNT
+echo "#!/bin/bash -l
+#SBATCH -A $ACCOUNT
 #SBATCH -p core -n $BLAST_THREADS
 #SBATCH -t 4-00:00:00
 #SBATCH -J finish.orthomcl
@@ -280,7 +302,7 @@ echo "#SBATCH -A $ACCOUNT
 module load bioinfo-tools
 module load OrthoMCL/2.0.9
 #module load mcl/14-137   
-#module load sqlite/3.8.5
+#module load sqlite/3.16.2
 #module load blast/2.5.0+
 #module load perl/5.18.4
 #module load BioPerl/1.6.924_Perl5.18.4
@@ -310,8 +332,3 @@ mcl mclInput  --abc -I 1.5 -o mclOutput.I15.out
 orthomclMclToGroups OG 1 < mclOutput.I15.out > mclGroups.I15.table
 " > $DIR/finish.orthomcl.sh
 
-if [ $BLAST_Q -eq 1 ] ; then
-    CMD="sbatch --dependency=afterok:$JOBS $DIR/finish.ortho.mcl.sh"
-    echo "wrapup slurm command is '$CMD'"
-    eval $CMD;
-fi
