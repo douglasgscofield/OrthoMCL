@@ -8,13 +8,14 @@ SPLIT_DEFAULT=50
 
 module load bioinfo-tools
 module load OrthoMCL/2.0.9
+# all other prerequisites are loaded by OrthoMCL/2.0.9
 #module load mcl/14-137   
 #module load sqlite/3.16.2
 #module load blast/2.5.0+
 #module load perl/5.18.4
 #module load BioPerl/1.6.924_Perl5.18.4
 
-OPTS=$(getopt -o Cc:p:u:s:o:a:e:t: -l "CreateConfig,config:,protein_dir:,uniqid:,split:,ortho_db:,account:,email:,time:" -n $0 -- "$@")
+OPTS=$(getopt -o Cc:p:u:s:o:a:e:t:T: -l "CreateConfig,config:,protein_dir:,uniqid:,split:,ortho_db:,account:,email:,time:,threads:" -n $0 -- "$@")
 if [ $? -ne 0 ]
 then
     exit 1
@@ -93,6 +94,14 @@ while true ; do
             shift;
           fi
           ;;
+        -T|--threads) 
+          shift;      
+          if [ -n "$1" ]; then
+            echo "setting BLAST_THREADS (for each blast job) to be $1";
+            BLAST_THREADS="$1";
+            shift;
+          fi
+          ;;
          --)
            shift;
            break;
@@ -126,7 +135,7 @@ fi
 
 if [ ! $PROTEIN_FASTA_DIR  ] ; then
   echo "Need to provide protein fasta dir"
-  echo "${0##*/} -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name] -a [SLURM account] -e [SLURM email] -t [SLURM blast job time]
+  echo "${0##*/} -c [config file] -p [protein dir] -u [fasta header uniq id col] -o [ortho db name] -a [SLURM account] -e [SLURM email] -t [SLURM blast job time] -T [number of blast threads]
 
 ${0##*/} -C        creates an example config file to 'orthomcl.config' and then exits.  If
                    the -o option is used, the database within the example config file is given
@@ -153,6 +162,8 @@ account      :     SLURM account to charge for blast jobs
 email        :     Email address for SLURM blast job notifications
 time         :     Time limit to use for each SLURM blast job
                    [default=$BLAST_TIME]
+threads      :     Number of blast threads to use for each SLURM blast job
+                   [default=$BLAST_THREADS]
 "
   exit 1
 
